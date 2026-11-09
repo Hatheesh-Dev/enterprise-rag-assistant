@@ -13,3 +13,6 @@ __pycache__/
 
 #Testing cache
 .pytest_cache/
+
+#Ignoring IDE files
+.idea/
