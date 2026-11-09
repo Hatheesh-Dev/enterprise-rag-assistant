@@ -2,6 +2,10 @@ from pathlib import Path
 
 from app.ingestion.document_loader import load_document
 from app.ingestion.chunker import chunk_text
+from app.ingestion.metadata import (
+    generate_document_metadata,
+    generate_chunk_records
+)
 
 
 SUPPORTED_EXTENSIONS = {
@@ -17,34 +21,48 @@ def process_document(
     file_path: str,
     chunk_size: int = 100,
     chunk_overlap: int = 20
-) -> list[str]:
+) -> list[dict]:
 
     path = Path(file_path)
 
     print(f"Processing document: {path.name}")
 
+    # Step 1: Extract document content
     text = load_document(file_path)
 
     if not text.strip():
         raise ValueError("Document contains no extractable text.")
 
+    print(f"Extracted {len(text)} characters.")
+
+    # Step 2: Generate chunks
     chunks = chunk_text(
         text,
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
     )
 
-    print(f"Extracted {len(text)} characters.")
     print(f"Generated {len(chunks)} chunks.")
 
-    return chunks
+    # Step 3: Generate document metadata
+    document_metadata = generate_document_metadata(file_path)
+
+    # Step 4: Generate metadata-rich chunk records
+    chunk_records = generate_chunk_records(
+        chunks,
+        document_metadata
+    )
+
+    print(f"Generated {len(chunk_records)} structured records.")
+
+    return chunk_records
 
 
 def process_directory(
     directory_path: str,
     chunk_size: int = 100,
     chunk_overlap: int = 20
-) -> dict[str, list[str]]:
+) -> dict[str, list[dict]]:
 
     directory = Path(directory_path)
 
@@ -69,13 +87,13 @@ def process_directory(
     for file_path in files:
 
         try:
-            chunks = process_document(
+            records = process_document(
                 str(file_path),
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap
             )
 
-            processed_documents[file_path.name] = chunks
+            processed_documents[file_path.name] = records
 
         except Exception as error:
             print(f"Failed to process {file_path.name}: {error}")
@@ -95,12 +113,23 @@ if __name__ == "__main__":
 
     total_chunks = 0
 
-    for filename, chunks in results.items():
+    for filename, records in results.items():
 
         print(f"\nDocument: {filename}")
-        print(f"Chunks: {len(chunks)}")
 
-        total_chunks += len(chunks)
+        for record in records:
 
-    print(f"\nTotal documents processed: {len(results)}")
+            print("\n-----------------------------")
+
+            print(f"Document ID: {record['document_id']}")
+            print(f"Chunk ID: {record['chunk_id']}")
+            print(f"Chunk Index: {record['chunk_index']}")
+            print(f"Content: {record['content']}")
+
+        total_chunks += len(records)
+
+        print(f"\nTotal chunks: {len(records)}")
+
+    print("\n========== FINAL SUMMARY ==========")
+    print(f"Total documents processed: {len(results)}")
     print(f"Total chunks generated: {total_chunks}")
