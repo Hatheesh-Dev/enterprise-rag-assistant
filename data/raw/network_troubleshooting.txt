@@ -1,0 +1,23 @@
+Company Network Troubleshooting Guide
+
+1. Network Connectivity
+
+Employees experiencing network connectivity
+issues should first check their physical
+network connections.
+
+2. DNS Troubleshooting
+
+If websites are not accessible, verify DNS
+resolution using the nslookup command.
+
+3. VPN Troubleshooting
+
+Employees working remotely should verify
+their VPN connection before escalating
+network-related issues.
+
+4. Support Escalation
+
+If the issue persists, contact the IT
+network support team.
